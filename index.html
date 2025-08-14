@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Memory Flip Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      margin-bottom: 20px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .game-board {
+      display: grid;
+      grid-template-columns: repeat(4, 100px);
+      grid-gap: 10px;
+      justify-content: center;
+      margin: 20px auto;
+    }
+
+    .card {
+      width: 100px;
+      height: 100px;
+      background-color: #999;
+      color: white;
+      font-size: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.3s;
+    }
+
+    .card.flipped {
+      background-color: #4caf50;
+    }
+
+    .card.matched {
+      background-color: #2196f3;
+      cursor: default;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Memory Flip Game</h1>
+  <div class="stats">
+    <p>Attempts: <span id="attempts">0</span></p>
+    <p>Time: <span id="timer">0</span>s</p>
+    <button id="resetBtn">🔁 Restart</button>
+  </div>
+  <div class="game-board" id="gameBoard"></div>
+
+  <script>
+    const board = document.getElementById('gameBoard');
+    const attemptsDisplay = document.getElementById('attempts');
+    const timerDisplay = document.getElementById('timer');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const icons = ['🍎','🍌','🍇','🍓','🍍','🍉','🥝','🍒'];
+    let cards = [];
+    let flippedCards = [];
+    let matchedCount = 0;
+    let attempts = 0;
+    let timer = 0;
+    let timerInterval;
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function createBoard() {
+      const doubledIcons = [...icons, ...icons];
+      const shuffled = shuffle(doubledIcons);
+      board.innerHTML = '';
+      matchedCount = 0;
+      attempts = 0;
+      attemptsDisplay.textContent = attempts;
+      flippedCards = [];
+
+      shuffled.forEach((icon, index) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.icon = icon;
+        card.dataset.index = index;
+        card.addEventListener('click', flipCard);
+        board.appendChild(card);
+        cards[index] = card;
+      });
+
+      clearInterval(timerInterval);
+      timer = 0;
+      timerDisplay.textContent = timer;
+      timerInterval = setInterval(() => {
+        timer++;
+        timerDisplay.textContent = timer;
+      }, 1000);
+    }
+
+    function flipCard() {
+      const card = this;
+      if (card.classList.contains('flipped') || card.classList.contains('matched') || flippedCards.length === 2) {
+        return;
+      }
+
+      card.textContent = card.dataset.icon;
+      card.classList.add('flipped');
+      flippedCards.push(card);
+
+      if (flippedCards.length === 2) {
+        attempts++;
+        attemptsDisplay.textContent = attempts;
+
+        const [card1, card2] = flippedCards;
+        if (card1.dataset.icon === card2.dataset.icon) {
+          card1.classList.add('matched');
+          card2.classList.add('matched');
+          matchedCount += 2;
+          flippedCards = [];
+
+          if (matchedCount === cards.length) {
+            clearInterval(timerInterval);
+            setTimeout(() => {
+              alert(`🎉 You won in ${attempts} attempts and ${timer} seconds!`);
+            }, 300);
+          }
+        } else {
+          setTimeout(() => {
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            card1.textContent = '';
+            card2.textContent = '';
+            flippedCards = [];
+          }, 800);
+        }
+      }
+    }
+
+    resetBtn.addEventListener('click', createBoard);
+    createBoard();
+  </script>
+</body>
+</html>
